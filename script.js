@@ -628,9 +628,64 @@ function renderMyRegistrations() {
   }
 
   container.innerHTML = `
-    <div class="table-card">
+    <!-- Mobile Card View (Screens <= 768px) -->
+    <div class="mobile-reg-cards-list">
+      ${myRegs.map(reg => {
+        const event = state.events.find(e => e.id === reg.eventId) || {};
+        const isAttended = reg.status === 'attended';
+        const isWaitlist = reg.status === 'waitlist';
+
+        return `
+          <div class="student-reg-card">
+            <div class="student-reg-card-header">
+              <span class="student-pass-badge"><i class="bi bi-qr-code"></i> ${reg.passId}</span>
+              <span class="status-badge ${isAttended ? 'status-attended' : isWaitlist ? 'status-cancelled' : 'status-confirmed'}">
+                ${isAttended ? 'Verified Present' : isWaitlist ? 'Waitlist (#1)' : 'Confirmed Entry'}
+              </span>
+            </div>
+
+            <div class="student-reg-card-title">${event.title || 'REC Event'}</div>
+
+            <div class="student-reg-card-meta">
+              <div class="student-reg-card-meta-item">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span>${event.venue || 'REC Campus'}</span>
+              </div>
+              <div class="student-reg-card-meta-item">
+                <i class="bi bi-calendar3"></i>
+                <span>${formatDate(event.date)} • ${event.time || ''}</span>
+              </div>
+              <div class="student-reg-card-meta-item">
+                <i class="bi bi-person-fill"></i>
+                <span>${reg.isTeam ? `<strong style="color: var(--purple);"><i class="bi bi-people-fill"></i> Team: ${reg.teamName}</strong>` : 'Individual Pass'}</span>
+              </div>
+            </div>
+
+            <div class="student-reg-card-actions">
+              <button class="table-btn" onclick="viewTicketModal('${reg.passId}')">
+                <i class="bi bi-qr-code"></i> REC Pass
+              </button>
+              ${isAttended ? `
+                <button class="table-btn table-btn-success" onclick="viewCertificateModal('${reg.passId}')">
+                  <i class="bi bi-award"></i> Certificate
+                </button>
+                <button class="table-btn" onclick="openFeedbackModal(${reg.eventId})" title="Submit Event Feedback">
+                  <i class="bi bi-star"></i> Rate
+                </button>
+              ` : ''}
+              <button class="table-btn" onclick="exportCalendarSingle('${reg.passId}')" title="Add to Calendar">
+                <i class="bi bi-calendar-plus"></i> + Calendar
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <!-- Desktop Table View (Screens >= 769px) -->
+    <div class="table-card desktop-table-view">
       <div class="table-header-bar">
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
           <img src="logo.png" alt="REC Logo" style="width: 32px; height: 32px; object-fit: contain;">
           <div>
             <h3>My Registered REC Events</h3>
