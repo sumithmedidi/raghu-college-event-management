@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Coordinator & Faculty Management Desk{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Coordinator Event Administration Desk</h1>
+      <p class="text-muted small mb-0">Manage events, track live registration numbers, and verify attendee check-ins.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'event_create' %}" class="btn btn-primary btn-sm fw-semibold">
+        <i class="bi bi-plus-lg me-1"></i> Post New Event
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-calendar2-check-fill"></i>
+        </div>
+        <div>
+          <h3 class="mb-0 fw-bold">{{ total_events }}</h3>
+          <small class="text-muted text-uppercase fw-semibold">Total Events</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-info bg-opacity-10 text-info">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <h3 class="mb-0 fw-bold">{{ total_registrations }}</h3>
+          <small class="text-muted text-uppercase fw-semibold">Registrations</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-success bg-opacity-10 text-success">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <div>
+          <h3 class="mb-0 fw-bold">{{ total_attended }}</h3>
+          <small class="text-muted text-uppercase fw-semibold">Verified Attendees</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+          <i class="bi bi-percent"></i>
+        </div>
+        <div>
+          <h3 class="mb-0 fw-bold">{{ attendance_rate }}%</h3>
+          <small class="text-muted text-uppercase fw-semibold">Attendance Rate</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Charts Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm border rounded-3 p-3 h-100">
+        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i> Events by Category</h6>
+        <div style="height: 240px;" class="position-relative">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm border rounded-3 p-3 h-100">
+        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-line-fill text-success me-2"></i> Top Registered Events</h6>
+        <div style="height: 240px;" class="position-relative">
+          <canvas id="topEventsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Managed Events Table -->
+  <div class="card shadow-sm border rounded-3 overflow-hidden mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <h5 class="card-title fw-bold mb-0">Managed Campus Events</h5>
+      <a href="{% url 'event_create' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add Event
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small text-uppercase">
+          <tr>
+            <th>Event Title & Venue</th>
+            <th>Category</th>
+            <th>Event Date</th>
+            <th>Registered / Max</th>
+            <th>Status</th>
+            <th class="text-end">Management Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+            <tr>
+              <td>
+                <a href="{% url 'event_detail' event.slug %}" class="fw-bold text-dark text-decoration-none">{{ event.title }}</a>
+                <div class="text-muted small">{{ event.venue }}</div>
+              </td>
+              <td>
+                <span class="badge bg-{{ event.category.color }} category-pill">{{ event.category.name }}</span>
+              </td>
+              <td>{{ event.event_date|date:"M d, Y" }}</td>
+              <td>
+                <div class="small fw-semibold">{{ event.registered_count }} / {{ event.max_capacity }}</div>
+                <div class="progress mt-1" style="height: 5px; width: 100px;">
+                  <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio event.registered_count event.max_capacity 100 %}%;"></div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-{% if event.status == 'upcoming' %}success{% elif event.status == 'completed' %}secondary{% else %}danger{% endif %} text-uppercase">
+                  {{ event.get_status_display }}
+                </span>
+              </td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'event_participants' event.slug %}" class="btn btn-outline-primary" title="View & Mark Attendees">
+                    <i class="bi bi-people-fill me-1"></i> Attendees
+                  </a>
+                  <a href="{% url 'event_edit' event.slug %}" class="btn btn-outline-secondary" title="Edit Event">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a href="{% url 'export_participants_csv' event.slug %}" class="btn btn-outline-success" title="Export CSV">
+                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                  </a>
+                  <a href="{% url 'event_delete' event.slug %}" class="btn btn-outline-danger" title="Delete Event">
+                    <i class="bi bi-trash3"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">No events managed yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Category Chart
+    const catNames = {{ cat_names_json|safe }};
+    const catCounts = {{ cat_counts_json|safe }};
+    
+    const ctxCat = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctxCat, {
+      type: 'doughnut',
+      data: {
+        labels: catNames,
+        datasets: [{
+          data: catCounts,
+          backgroundColor: ['#2563EB', '#059669', '#D97706', '#7C3AED', '#0F172A'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right' }
+        }
+      }
+    });
+
+    // 2. Top Events Chart
+    const evtTitles = {{ event_titles_json|safe }};
+    const evtCounts = {{ event_counts_json|safe }};
+
+    const ctxEvt = document.getElementById('topEventsChart').getContext('2d');
+    new Chart(ctxEvt, {
+      type: 'bar',
+      data: {
+        labels: evtTitles,
+        datasets: [{
+          label: 'Registrations',
+          data: evtCounts,
+          backgroundColor: '#2563EB',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

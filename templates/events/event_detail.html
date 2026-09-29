@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'event_list' %}">Events</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ event.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Left Column: Banner & Detailed Content -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm border rounded-3 overflow-hidden mb-4">
+        <img src="{{ event.banner_url|default:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80' }}" class="w-100" style="max-height: 360px; object-fit: cover;" alt="{{ event.title }}">
+        
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge bg-{{ event.category.color }} px-3 py-2 fs-6">
+              <i class="bi {{ event.category.icon }} me-1"></i> {{ event.category.name }}
+            </span>
+            <span class="badge bg-dark px-3 py-2 fs-6">{{ event.get_status_display }}</span>
+          </div>
+
+          <h1 class="h2 fw-bold text-dark mb-3">{{ event.title }}</h1>
+          <p class="lead text-muted fs-6 mb-4">{{ event.short_summary }}</p>
+
+          <h4 class="fw-bold h5 mb-3 border-bottom pb-2">Event Guidelines & Agenda</h4>
+          <div class="text-secondary lh-lg mb-4" style="white-space: pre-line;">
+            {{ event.description }}
+          </div>
+
+          <!-- Live Event Announcements -->
+          {% if announcements %}
+            <div class="card bg-light border-0 rounded-3 p-3 mb-4">
+              <h5 class="fw-bold h6 text-primary mb-3"><i class="bi bi-broadcast me-2"></i> Live Event Notices & Updates</h5>
+              <div class="list-group list-group-flush">
+                {% for ann in announcements %}
+                  <div class="list-group-item bg-transparent px-0 py-2">
+                    <div class="d-flex justify-content-between">
+                      <strong class="{% if ann.is_important %}text-danger{% else %}text-dark{% endif %}">
+                        {% if ann.is_important %}<i class="bi bi-exclamation-circle-fill me-1"></i>{% endif %}
+                        {{ ann.title }}
+                      </strong>
+                      <small class="text-muted">{{ ann.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="small text-muted mb-0 mt-1">{{ ann.message }}</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Registration Card & Logistics -->
+    <div class="col-lg-4">
+      <!-- Registration Action Box -->
+      <div class="card shadow-sm border rounded-3 p-4 mb-4 sticky-top" style="top: 80px; z-index: 10;">
+        <h4 class="h5 fw-bold mb-3">Event Registration</h4>
+
+        <!-- Capacity Status -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span>Capacity</span>
+            <strong>{{ event.registered_count }} / {{ event.max_capacity }} Filled</strong>
+          </div>
+          <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio event.registered_count event.max_capacity 100 %}%;"></div>
+          </div>
+          <small class="text-success fw-semibold mt-1 d-block">{{ event.available_seats }} seats available</small>
+        </div>
+
+        <!-- Event Key Details -->
+        <ul class="list-unstyled small mb-4">
+          <li class="py-2 border-bottom d-flex justify-content-between">
+            <span class="text-muted"><i class="bi bi-calendar3 me-2"></i> Date:</span>
+            <strong>{{ event.event_date|date:"l, M d, Y" }}</strong>
+          </li>
+          <li class="py-2 border-bottom d-flex justify-content-between">
+            <span class="text-muted"><i class="bi bi-clock me-2"></i> Time:</span>
+            <strong>{{ event.start_time|time:"h:i A" }} - {{ event.end_time|time:"h:i A" }}</strong>
+          </li>
+          <li class="py-2 border-bottom d-flex justify-content-between">
+            <span class="text-muted"><i class="bi bi-geo-alt me-2"></i> Venue:</span>
+            <strong class="text-end">{{ event.venue }}</strong>
+          </li>
+          <li class="py-2 border-bottom d-flex justify-content-between">
+            <span class="text-muted"><i class="bi bi-hourglass-split me-2"></i> Deadline:</span>
+            <strong class="text-danger">{{ event.registration_deadline|date:"M d, h:i A" }}</strong>
+          </li>
+        </ul>
+
+        <!-- Action Button -->
+        {% if user.is_authenticated %}
+          {% if user_registered %}
+            <div class="alert alert-success d-flex align-items-center mb-3 py-2 small">
+              <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+              <div>You are registered for this event!</div>
+            </div>
+            <a href="{% url 'registration_pass' user_registration.registration_id %}" class="btn btn-success w-100 py-2 fw-semibold mb-2">
+              <i class="bi bi-qr-code me-2"></i> View Verified E-Pass
+            </a>
+          {% elif event.is_registration_open %}
+            <a href="{% url 'register_event' event.slug %}" class="btn btn-primary w-100 py-2 fw-semibold">
+              <i class="bi bi-ticket-perforated me-2"></i> Confirm Registration (1-Click)
+            </a>
+          {% else %}
+            <button class="btn btn-secondary w-100 py-2" disabled>Registration Closed</button>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'login' %}?next={% url 'event_detail' event.slug %}" class="btn btn-primary w-100 py-2 fw-semibold">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Log in to Register
+          </a>
+        {% endif %}
+
+        <!-- Coordinator Info Card -->
+        <div class="bg-light rounded-3 p-3 mt-4 border">
+          <div class="small fw-bold text-dark mb-1">Faculty Coordinator In-Charge</div>
+          <div class="fw-semibold text-primary small">{{ event.coordinator_name }}</div>
+          <div class="text-muted small mt-1">{{ event.coordinator_contact }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

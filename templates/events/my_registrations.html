@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}My Event Registrations & Passes{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">My Registrations & Credentials</h1>
+      <p class="text-muted small mb-0">Track your event passes, check attendance status, and download certificates.</p>
+    </div>
+    <a href="{% url 'event_list' %}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-plus-lg me-1"></i> Browse More Events
+    </a>
+  </div>
+
+  <!-- Summary KPI cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-4">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-ticket-perforated-fill"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold">{{ active_count }}</h4>
+          <small class="text-muted">Active Registrations</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-success bg-opacity-10 text-success">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold">{{ attended_count }}</h4>
+          <small class="text-muted">Events Attended</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="kpi-card d-flex align-items-center gap-3">
+        <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+          <i class="bi bi-award-fill"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold">{{ attended_count }}</h4>
+          <small class="text-muted">Certificates Unlocked</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registrations Table -->
+  <div class="card shadow-sm border rounded-3 overflow-hidden">
+    <div class="card-header bg-white py-3">
+      <h5 class="card-title fw-bold mb-0">Registered College Events</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small text-uppercase">
+          <tr>
+            <th>Pass ID</th>
+            <th>Event Title & Venue</th>
+            <th>Event Date & Time</th>
+            <th>Registered On</th>
+            <th>Attendance Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reg in registrations %}
+            <tr>
+              <td>
+                <span class="font-monospace fw-bold text-dark">{{ reg.registration_id }}</span>
+              </td>
+              <td>
+                <a href="{% url 'event_detail' reg.event.slug %}" class="fw-bold text-dark text-decoration-none">{{ reg.event.title }}</a>
+                <div class="text-muted small">{{ reg.event.venue }}</div>
+              </td>
+              <td>
+                <div>{{ reg.event.event_date|date:"M d, Y" }}</div>
+                <small class="text-muted">{{ reg.event.start_time|time:"h:i A" }}</small>
+              </td>
+              <td class="text-muted small">{{ reg.registered_at|date:"M d, Y" }}</td>
+              <td>
+                {% if reg.status == 'attended' %}
+                  <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Attended</span>
+                {% elif reg.status == 'confirmed' %}
+                  <span class="badge bg-primary">Confirmed</span>
+                {% elif reg.status == 'cancelled' %}
+                  <span class="badge bg-danger">Cancelled</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ reg.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1">
+                  {% if reg.status != 'cancelled' %}
+                    <a href="{% url 'registration_pass' reg.registration_id %}" class="btn btn-outline-primary btn-sm fw-semibold" title="View Digital Pass">
+                      <i class="bi bi-qr-code me-1"></i> Pass
+                    </a>
+                  {% endif %}
+
+                  {% if reg.status == 'attended' and reg.certificate %}
+                    <a href="{% url 'certificate_view' reg.certificate.certificate_id %}" class="btn btn-outline-success btn-sm fw-semibold" title="View Certificate">
+                      <i class="bi bi-award me-1"></i> Cert
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-ticket-perforated fs-1 mb-2 d-block text-secondary"></i>
+                You have not registered for any events yet.
+                <div class="mt-2">
+                  <a href="{% url 'event_list' %}" class="btn btn-primary btn-sm">Explore Upcoming Events</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

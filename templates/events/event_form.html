@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+  <div class="card shadow-sm border rounded-3 p-4">
+    <h2 class="h4 fw-bold mb-3">{{ title }}</h2>
+    <p class="text-muted small mb-4">Fill in the event logistics, venue, capacity, and coordinator information.</p>
+
+    <form method="POST">
+      {% csrf_token %}
+      
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Event Title *</label>
+        {{ form.title }}
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Category / Track *</label>
+          {{ form.category }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Maximum Capacity *</label>
+          {{ form.max_capacity }}
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Event Date *</label>
+          {{ form.event_date }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Start Time *</label>
+          {{ form.start_time }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">End Time *</label>
+          {{ form.end_time }}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Campus Venue / Location *</label>
+        {{ form.venue }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Short Summary (Preview Card) *</label>
+        {{ form.short_summary }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Detailed Description & Rules *</label>
+        {{ form.description }}
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Registration Deadline *</label>
+          {{ form.registration_deadline }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Status</label>
+          {{ form.status }}
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Coordinator Name</label>
+          {{ form.coordinator_name }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Coordinator Contact</label>
+          {{ form.coordinator_contact }}
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold small">Banner Image URL</label>
+        {{ form.banner_url }}
+      </div>
+
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'coordinator_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary fw-semibold px-4">Save & Publish Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

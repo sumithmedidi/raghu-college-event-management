@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Certificate - {{ student.get_full_name|default:student.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Official Participation Certificate</h1>
+      <p class="text-muted small mb-0">Verified academic achievement credential.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-primary btn-sm fw-semibold">
+        <i class="bi bi-printer me-1"></i> Print / Download PDF
+      </button>
+      <a href="{% url 'my_registrations' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Events
+      </a>
+    </div>
+  </div>
+
+  <!-- Verified Certificate Sheet -->
+  <div class="cert-container shadow">
+    <div class="cert-header">
+      <div class="small text-muted text-uppercase fw-bold letter-spacing-1">Certificate of Participation</div>
+      <div class="cert-title">College of Engineering & Technology</div>
+      <div class="cert-subtitle">Office of Academic & Student Affairs • Year 2026</div>
+    </div>
+
+    <div class="my-4">
+      <div class="text-primary fw-bold fs-5 text-uppercase">Award of Participation</div>
+      <p class="text-muted small mt-2 mb-1">This is proudly presented to certify that</p>
+      
+      <div class="cert-student-name">
+        {{ student.get_full_name|default:student.username }}
+      </div>
+
+      <div class="text-muted small mb-3">
+        Student Roll No: <strong>{{ profile.roll_number|default:'N/A' }}</strong> • Department of {{ profile.department|default:'Computer Science' }}
+      </div>
+
+      <p class="text-secondary small mx-auto lh-lg" style="max-width: 580px;">
+        has actively participated in, completed all requisite sessions, and successfully represented the institution in 
+        <strong class="text-dark">"{{ event.title }}"</strong> conducted on {{ event.event_date|date:"F d, Y" }} at {{ event.venue }}.
+      </p>
+    </div>
+
+    <div class="row pt-4 mt-4 border-top">
+      <div class="col-6 text-center">
+        <div class="fw-bold text-dark small">{{ cert.signer_name }}</div>
+        <div class="text-muted" style="font-size: 11px;">{{ cert.signer_designation }}</div>
+      </div>
+      <div class="col-6 text-center">
+        <div class="fw-bold text-dark small">Dean of Academic Affairs</div>
+        <div class="text-muted" style="font-size: 11px;">Head of Institution</div>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-2 text-center text-muted font-monospace" style="font-size: 11px;">
+      Credential ID: {{ cert.certificate_id }} • Issued on {{ cert.issued_at|date:"M d, Y" }} • Verified via CEMS Portal
+    </div>
+  </div>
+</div>
+{% endblock %}

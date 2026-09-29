@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Raghu Engineering College (Autonomous) | Event Management System</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Production CSS Design System -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ================= TOP UTILITY & ROLE BAR ================= -->
+  <header class="top-academic-bar">
+    <div class="top-bar-content">
+      <div class="top-bar-branding">
+        <img src="logo.png" alt="REC Logo" class="top-bar-logo">
+        <span class="team-badge"><i class="bi bi-mortarboard-fill"></i> REC Autonomous</span>
+        <span class="top-bar-title-text">Raghu Engineering College • Visakhapatnam</span>
+      </div>
+      
+      <div class="role-switcher-group">
+        <span class="role-switcher-label"><i class="bi bi-shield-shaded"></i> Role:</span>
+        <div class="role-segmented-control" role="group" aria-label="Role Switcher">
+          <button class="role-btn active" data-role="student" title="Switch to Student view">
+            <i class="bi bi-person"></i> <span>Student</span>
+          </button>
+          <button class="role-btn" data-role="coordinator" title="Switch to Faculty Coordinator view">
+            <i class="bi bi-person-workspace"></i> <span>Coordinator</span>
+          </button>
+          <button class="role-btn" data-role="admin" title="Switch to Admin view">
+            <i class="bi bi-shield-check"></i> <span>Admin</span>
+          </button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+          <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN APP NAVIGATION ================= -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="#" class="brand-logo" onclick="switchTab('events')">
+        <div class="brand-logo-frame">
+          <img src="logo.png" alt="Raghu Engineering College Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text">
+          <h1>Raghu Engineering College</h1>
+          <span>Autonomous Institution • Estd. 2001</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <ul class="nav-links">
+        <li>
+          <button class="nav-link-btn active" data-tab="events">
+            <i class="bi bi-grid-fill"></i> <span>Explore Events</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-link-btn" data-tab="my-events">
+            <i class="bi bi-ticket-perforated-fill"></i> <span>Student Portal</span>
+            <span class="nav-counter-badge" id="nav-reg-badge" style="display: none;">0</span>
+          </button>
+        </li>
+        <li class="coordinator-only" style="display: none;">
+          <button class="nav-link-btn" data-tab="coordinator">
+            <i class="bi bi-sliders2-vertical"></i> <span>Coordinator Desk</span>
+          </button>
+        </li>
+        <li class="admin-only" style="display: none;">
+          <button class="nav-link-btn" data-tab="admin">
+            <i class="bi bi-shield-lock-fill"></i> <span>Admin Panel</span>
+          </button>
+        </li>
+      </ul>
+
+      <!-- Nav Action Group -->
+      <div class="nav-actions-group">
+        <!-- Live QR Scanner Quick Button for Coordinator / Admin -->
+        <button class="nav-cta-btn scanner-cta coordinator-only" style="display: none;" onclick="openQRScannerModal()" title="Live Gate Check-in QR Scanner">
+          <i class="bi bi-qr-code-scan"></i> <span>Scan QR Pass</span>
+        </button>
+
+        <button class="nav-cta-btn coordinator-only" style="display: none;" onclick="openModal('modal-create-event')">
+          <i class="bi bi-plus-lg"></i> <span>Post Event</span>
+        </button>
+        <button class="nav-cta-btn admin-only" style="display: none; background: #0f172a; border-color: #0f172a;" onclick="openModal('modal-add-coordinator')">
+          <i class="bi bi-person-plus-fill"></i> <span>Add Coordinator</span>
+        </button>
+
+        <!-- Mobile Menu Hamburger Button -->
+        <button class="mobile-nav-toggle" id="mobile-menu-toggle" aria-label="Toggle mobile menu" onclick="toggleMobileMenu()">
+          <i class="bi bi-list" id="mobile-menu-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Dropdown Menu -->
+    <div class="mobile-drawer" id="mobile-drawer">
+      <div class="mobile-drawer-content">
+        <div class="mobile-drawer-role-box">
+          <span class="mobile-drawer-label">Active Role:</span>
+          <div class="role-segmented-control w-100">
+            <button class="role-btn active" data-role="student" onclick="setRole('student'); toggleMobileMenu(false);">
+              <i class="bi bi-person"></i> Student
+            </button>
+            <button class="role-btn" data-role="coordinator" onclick="setRole('coordinator'); toggleMobileMenu(false);">
+              <i class="bi bi-person-workspace"></i> Coord
+            </button>
+            <button class="role-btn" data-role="admin" onclick="setRole('admin'); toggleMobileMenu(false);">
+              <i class="bi bi-shield-check"></i> Admin
+            </button>
+          </div>
+        </div>
+
+        <ul class="mobile-drawer-links">
+          <li>
+            <button class="mobile-nav-btn active" data-tab="events" onclick="switchTab('events'); toggleMobileMenu(false);">
+              <i class="bi bi-grid-fill"></i> Explore Events
+            </button>
+          </li>
+          <li>
+            <button class="mobile-nav-btn" data-tab="my-events" onclick="switchTab('my-events'); toggleMobileMenu(false);">
+              <i class="bi bi-ticket-perforated-fill"></i> Student Passes & Certificates
+            </button>
+          </li>
+          <li class="coordinator-only" style="display: none;">
+            <button class="mobile-nav-btn" data-tab="coordinator" onclick="switchTab('coordinator'); toggleMobileMenu(false);">
+              <i class="bi bi-sliders2-vertical"></i> Coordinator Desk
+            </button>
+          </li>
+          <li class="coordinator-only" style="display: none;">
+            <button class="mobile-nav-btn highlight" onclick="openQRScannerModal(); toggleMobileMenu(false);">
+              <i class="bi bi-qr-code-scan"></i> <strong>Launch Gate QR Scanner</strong>
+            </button>
+          </li>
+          <li class="coordinator-only" style="display: none;">
+            <button class="mobile-nav-btn" onclick="openModal('modal-create-event'); toggleMobileMenu(false);">
+              <i class="bi bi-plus-circle"></i> Publish New Event
+            </button>
+          </li>
+          <li class="admin-only" style="display: none;">
+            <button class="mobile-nav-btn" data-tab="admin" onclick="switchTab('admin'); toggleMobileMenu(false);">
+              <i class="bi bi-shield-lock-fill"></i> Admin Access Management
+            </button>
+          </li>
+        </ul>
+
+        <div class="mobile-drawer-footer">
+          <button class="theme-toggle-btn mobile-theme-btn" onclick="toggleTheme()">
+            <i class="bi bi-circle-half"></i> Switch Theme (<span id="mobile-theme-text">Dark</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= WORKSPACE HEADER & SEARCH ================= -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-main-content">
+        <div class="hero-badges-row">
+          <span class="hero-badge"><i class="bi bi-mortarboard-fill"></i> Raghu Engineering College</span>
+          <span class="hero-badge badge-green"><i class="bi bi-patch-check-fill"></i> NAAC 'A+' & NBA Accredited</span>
+          <span class="hero-badge"><i class="bi bi-calendar2-event-fill"></i> Academic Events 2026</span>
+        </div>
+        <h2 class="hero-title">REC Campus Events & Activity Directory</h2>
+        <p class="hero-desc">
+          Official centralized portal for technical hackathons, symposiums, workshops, Tarang cultural fests, and sports meets at <strong>Raghu Engineering College (Autonomous)</strong>.
+        </p>
+
+        <!-- Search Box -->
+        <div class="hero-search-box">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="event-search-input" placeholder="Search by event, track, venue, or coordinator..." aria-label="Search events">
+          <button type="button" class="search-btn" onclick="renderEventCards()">
+            <i class="bi bi-search"></i> <span>Search</span>
+          </button>
+        </div>
+
+        <div class="hero-quick-actions">
+          <button class="btn-outline" onclick="switchTab('events')">
+            <i class="bi bi-collection"></i> <span>Browse All Events</span>
+          </button>
+          <button class="btn-outline" onclick="switchTab('my-events')">
+            <i class="bi bi-qr-code"></i> <span>My Passes & Certs</span>
+          </button>
+          <button class="btn-primary-action coordinator-only" style="display: none; max-width: fit-content;" onclick="openQRScannerModal()">
+            <i class="bi bi-qr-code-scan"></i> <span>Gate QR Scanner</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Announcements Feed -->
+      <div class="broadcast-card">
+        <div class="broadcast-header">
+          <h3><i class="bi bi-broadcast"></i> REC Live Notice Board</h3>
+          <span class="live-pill"><i class="bi bi-record-circle-fill text-danger pulse"></i> LIVE</span>
+        </div>
+        <div class="broadcast-list" id="broadcast-list">
+          <!-- Rendered dynamically by script.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= METRICS STATS BAR ================= -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-blue">
+          <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-total-events">5</h3>
+          <p>Active Events</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-purple">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-total-regs">3</h3>
+          <p>Total Registrations</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-green">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-total-attended">1</h3>
+          <p>Verified Attendees</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-amber">
+          <i class="bi bi-award"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-total-certs">1</h3>
+          <p>Certificates Issued</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN APP CONTAINER ================= -->
+  <main class="app-container">
+
+    <!-- TAB 1: EXPLORE EVENTS -->
+    <section id="view-events">
+      <div class="section-head">
+        <div class="section-head-title">
+          <span>REC Events Catalog</span>
+          <h2>Scheduled Campus Events & Activities</h2>
+        </div>
+        <div class="section-actions">
+          <span class="results-count-text" id="events-count-label">Showing all events</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="filter-tabs-container">
+        <div class="filter-tabs" id="category-filter-tabs">
+          <button class="tab-btn active" data-category="all"><i class="bi bi-grid-fill"></i> All Tracks</button>
+          <button class="tab-btn" data-category="technical"><i class="bi bi-code-square"></i> Technical</button>
+          <button class="tab-btn" data-category="cultural"><i class="bi bi-music-note"></i> Cultural</button>
+          <button class="tab-btn" data-category="sports"><i class="bi bi-trophy"></i> Sports</button>
+          <button class="tab-btn" data-category="workshops"><i class="bi bi-tools"></i> Workshops</button>
+          <button class="tab-btn" data-category="seminars"><i class="bi bi-easel"></i> Seminars</button>
+        </div>
+      </div>
+
+      <!-- Events Grid -->
+      <div class="events-grid" id="events-grid">
+        <!-- Rendered by script.js -->
+      </div>
+    </section>
+
+    <!-- TAB 2: STUDENT PORTAL (MY REGISTRATIONS & PASSES) -->
+    <section id="view-my-events" style="display: none;">
+      <div class="section-head">
+        <div class="section-head-title">
+          <span>Student Portal</span>
+          <h2>My Event Passes, Attendance & Certificates</h2>
+        </div>
+        <button class="btn-outline" onclick="switchTab('events')">
+          <i class="bi bi-plus-lg"></i> Register for More Events
+        </button>
+      </div>
+
+      <div id="my-registrations-list">
+        <!-- Rendered by script.js -->
+      </div>
+    </section>
+
+    <!-- TAB 3: COORDINATOR DASHBOARD -->
+    <section id="view-coordinator" style="display: none;">
+      <div class="section-head">
+        <div class="section-head-title">
+          <span>Faculty & Coordinator Portal</span>
+          <h2>Raghu Engineering College • Event Admin Desk</h2>
+        </div>
+        <div class="section-head-buttons">
+          <button class="btn-primary-action" style="background: var(--success); border-color: var(--success);" onclick="openQRScannerModal()">
+            <i class="bi bi-qr-code-scan"></i> <span>Launch QR Scanner</span>
+          </button>
+          <button class="nav-cta-btn" onclick="openModal('modal-create-event')">
+            <i class="bi bi-plus-lg"></i> <span>Post New Event</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Coordinator Summary Row -->
+      <div class="coord-summary-banner">
+        <div class="coord-banner-item">
+          <span class="coord-banner-title"><i class="bi bi-lightning-charge-fill text-warning"></i> Fast Gate Check-in:</span>
+          <span class="coord-banner-desc">Scan student E-Passes at REC venue entrances to mark attendance and instantly unlock accredited certificates.</span>
+        </div>
+        <button class="btn-scanner-pill" onclick="openQRScannerModal()">
+          <i class="bi bi-camera-fill"></i> Scan Attendee Passes
+        </button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header-bar">
+          <div>
+            <h3>Managed Campus Events</h3>
+            <small>Overview of event capacity, real-time attendance, and participant management</small>
+          </div>
+        </div>
+
+        <div class="table-responsive-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Event Title & Venue</th>
+                <th>Track</th>
+                <th>Event Date</th>
+                <th>Registration Capacity</th>
+                <th>Attendance</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="coordinator-events-table-body">
+              <!-- Rendered by script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ADMIN PANEL (FACULTY COORDINATORS & ACCESS CONTROL) -->
+    <section id="view-admin" style="display: none;">
+      <div class="section-head">
+        <div class="section-head-title">
+          <span>REC System Administration</span>
+          <h2>Faculty Coordinators & Access Management</h2>
+        </div>
+        <div class="section-head-buttons">
+          <button class="btn-primary-action" style="max-width: fit-content;" onclick="openModal('modal-add-coordinator')">
+            <i class="bi bi-person-plus-fill"></i> Add Faculty Coordinator
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Overview Metric Cards -->
+      <div class="admin-summary-grid">
+        <div class="admin-metric-card">
+          <div class="admin-metric-icon"><i class="bi bi-person-badge"></i></div>
+          <div>
+            <h4 id="admin-stat-coordinators">4</h4>
+            <p>Active Coordinators</p>
+          </div>
+        </div>
+        <div class="admin-metric-card">
+          <div class="admin-metric-icon"><i class="bi bi-building"></i></div>
+          <div>
+            <h4 id="admin-stat-depts">4</h4>
+            <p>REC Departments</p>
+          </div>
+        </div>
+        <div class="admin-metric-card">
+          <div class="admin-metric-icon"><i class="bi bi-calendar2-range"></i></div>
+          <div>
+            <h4 id="admin-stat-events">5</h4>
+            <p>Campus Events</p>
+          </div>
+        </div>
+        <div class="admin-metric-card">
+          <div class="admin-metric-icon"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <h4>REC Superuser</h4>
+            <p>Full Access Granted</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coordinators Management Table -->
+      <div class="table-card">
+        <div class="table-header-bar">
+          <div>
+            <h3>Registered REC Faculty Coordinators</h3>
+            <small>Manage appointed faculty conveners and event publishing authority</small>
+          </div>
+          <button class="table-btn" onclick="openModal('modal-add-coordinator')">
+            <i class="bi bi-plus-lg"></i> Add Coordinator
+          </button>
+        </div>
+
+        <div class="table-responsive-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Coordinator Name & Role</th>
+                <th>Department</th>
+                <th>Official Email & Phone</th>
+                <th>Assigned Events</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-coordinators-table-body">
+              <!-- Rendered by script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= STICKY MOBILE BOTTOM NAVIGATION BAR ================= -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button class="mobile-nav-item active" data-tab="events" onclick="switchTab('events')">
+      <i class="bi bi-grid-fill"></i>
+      <span>Explore</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="my-events" onclick="switchTab('my-events')">
+      <i class="bi bi-ticket-perforated-fill"></i>
+      <span>Passes</span>
+    </button>
+    <button class="mobile-nav-item coordinator-only" style="display: none;" onclick="openQRScannerModal()">
+      <div class="mobile-nav-scanner-btn">
+        <i class="bi bi-qr-code-scan"></i>
+      </div>
+      <span>Scan</span>
+    </button>
+    <button class="mobile-nav-item coordinator-only" style="display: none;" data-tab="coordinator" onclick="switchTab('coordinator')">
+      <i class="bi bi-sliders2-vertical"></i>
+      <span>Desk</span>
+    </button>
+    <button class="mobile-nav-item admin-only" style="display: none;" data-tab="admin" onclick="switchTab('admin')">
+      <i class="bi bi-shield-lock-fill"></i>
+      <span>Admin</span>
+    </button>
+  </nav>
+
+  <!-- ================= MODAL 1: EVENT DETAILS & CALENDAR SYNC ================= -->
+  <div class="modal-overlay" id="modal-event-detail">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Event Details & Guidelines</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-event-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="event-detail-content">
+        <!-- Rendered by script.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: STUDENT REGISTRATION FORM (INDIVIDUAL & TEAM) ================= -->
+  <div class="modal-overlay" id="modal-registration">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div>
+          <h3>Event Registration</h3>
+          <small style="color: var(--text-muted);" id="reg-event-title">Event Title</small>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-registration')">&times;</button>
+      </div>
+
+      <form id="registration-form">
+        <div class="modal-body">
+          <input type="hidden" id="reg-event-id">
+
+          <!-- Registration Type Selector (Individual vs Team) -->
+          <div class="reg-type-selector-box">
+            <span class="reg-type-label">Participation Format:</span>
+            <div class="reg-type-toggle">
+              <button type="button" class="reg-type-btn active" id="btn-type-individual" onclick="setRegistrationType('individual')">
+                <i class="bi bi-person-fill"></i> Individual Student
+              </button>
+              <button type="button" class="reg-type-btn" id="btn-type-team" onclick="setRegistrationType('team')">
+                <i class="bi bi-people-fill"></i> Team / Group (2-4 Members)
+              </button>
+            </div>
+          </div>
+
+          <!-- Team Fields (Visible only when Team is selected) -->
+          <div id="team-fields-container" style="display: none;" class="team-input-card">
+            <div class="form-group">
+              <label for="reg-team-name">Team Name / Project Title *</label>
+              <input type="text" id="reg-team-name" class="form-input" placeholder="e.g. REC Neural Ninjas, CodeCrafters">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-member2">Team Member 2 (Name & Roll No)</label>
+                <input type="text" id="reg-member2" class="form-input" placeholder="e.g. Priya Rao (24981A0515)">
+              </div>
+              <div class="form-group">
+                <label for="reg-member3">Team Member 3 (Name & Roll No)</label>
+                <input type="text" id="reg-member3" class="form-input" placeholder="e.g. Rahul Sharma (24981A4208)">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-name"><span id="lbl-lead-name">Student Full Name</span> *</label>
+              <input type="text" id="reg-name" class="form-input" required placeholder="e.g. Alex Johnson">
+            </div>
+            <div class="form-group">
+              <label for="reg-roll"><span id="lbl-lead-roll">REC Student Roll Number</span> *</label>
+              <input type="text" id="reg-roll" class="form-input" required placeholder="e.g. 24981A0501">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-dept">Academic Department *</label>
+              <select id="reg-dept" class="form-select" required>
+                <option value="Computer Science & Engineering" selected>Computer Science & Engineering (CSE)</option>
+                <option value="CSE (AI & Machine Learning)">CSE (AI & Machine Learning)</option>
+                <option value="CSE (Data Science)">CSE (Data Science)</option>
+                <option value="CSE (Cyber Security)">CSE (Cyber Security)</option>
+                <option value="Information Technology">Information Technology (IT)</option>
+                <option value="Electronics & Communication">Electronics & Communication (ECE)</option>
+                <option value="Electrical & Electronics">Electrical & Electronics (EEE)</option>
+                <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
+                <option value="Civil Engineering">Civil Engineering (CIVIL)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="reg-year">Year of Study *</label>
+              <select id="reg-year" class="form-select" required>
+                <option value="1st Year">1st Year (B.Tech)</option>
+                <option value="2nd Year">2nd Year (B.Tech)</option>
+                <option value="3rd Year" selected>3rd Year (B.Tech)</option>
+                <option value="4th Year">4th Year (B.Tech)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-email">Institutional Email *</label>
+              <input type="email" id="reg-email" class="form-input" required placeholder="student@raghuenggcollege.in">
+            </div>
+            <div class="form-group">
+              <label for="reg-phone">Contact Phone *</label>
+              <input type="tel" id="reg-phone" class="form-input" required placeholder="+91 9876543210">
+            </div>
+          </div>
+
+          <div class="reg-notice-box">
+            <img src="logo.png" alt="REC Logo" style="width: 22px; height: 22px; object-fit: contain;">
+            <span>Instant REC Digital Entry Pass with QR verification code is generated immediately upon confirmation.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-registration')">Cancel</button>
+          <button type="submit" class="btn-primary-action" id="btn-submit-registration">Confirm Registration</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: DIGITAL E-PASS / TICKET ================= -->
+  <div class="modal-overlay" id="modal-ticket">
+    <div class="modal-container" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-2">
+          <img src="logo.png" alt="REC Logo" style="width: 28px; height: 28px; object-fit: contain;">
+          <h3 class="mb-0">Raghu Engineering College • E-Pass</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-ticket')">&times;</button>
+      </div>
+      <div class="modal-body" id="ticket-content">
+        <!-- Rendered by script.js -->
+      </div>
+      <div class="modal-footer no-print modal-footer-wrap">
+        <button type="button" class="btn-primary-action" onclick="saveCurrentPassImage()">
+          <i class="bi bi-download"></i> Save Image
+        </button>
+        <button type="button" class="btn-outline" onclick="exportCurrentPassCalendar()">
+          <i class="bi bi-calendar-plus"></i> Add to Calendar
+        </button>
+        <button type="button" class="btn-outline" onclick="window.print()">
+          <i class="bi bi-printer"></i> Print / PDF
+        </button>
+        <button type="button" class="btn-outline" onclick="closeModal('modal-ticket')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 4: VERIFIED CERTIFICATE ================= -->
+  <div class="modal-overlay" id="modal-certificate">
+    <div class="modal-container modal-cert-container" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-2">
+          <img src="logo.png" alt="REC Logo" style="width: 28px; height: 28px; object-fit: contain;">
+          <h3 class="mb-0">Certificate of Participation</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-certificate')">&times;</button>
+      </div>
+      <div class="modal-body" id="certificate-content">
+        <!-- Rendered by script.js -->
+      </div>
+      <div class="modal-footer no-print modal-footer-wrap">
+        <button type="button" class="btn-primary-action" onclick="saveCurrentCertImage()">
+          <i class="bi bi-download"></i> Download Certificate
+        </button>
+        <button type="button" class="btn-outline" onclick="window.print()">
+          <i class="bi bi-printer"></i> Print / Save PDF
+        </button>
+        <button type="button" class="btn-outline" onclick="closeModal('modal-certificate')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 5: LIVE IN-BROWSER QR SCANNER FOR GATE ATTENDANCE ================= -->
+  <div class="modal-overlay" id="modal-qr-scanner">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header scanner-header">
+        <div class="d-flex align-items-center gap-2">
+          <div class="scanner-live-badge"><i class="bi bi-camera-fill"></i> REC GATE SCANNER</div>
+          <div>
+            <h3>Live QR Pass Check-in</h3>
+            <small style="color: var(--text-muted);">Raghu Engineering College Venue Entrance Scanner</small>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeQRScannerModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Video Viewport & Scanner Overlay -->
+        <div class="scanner-viewport-wrapper">
+          <video id="qr-video" playsinline muted autoplay class="scanner-video"></video>
+          <canvas id="qr-canvas" style="display: none;"></canvas>
+
+          <!-- Animated Laser Targeting Frame -->
+          <div class="scanner-overlay-frame">
+            <div class="scanner-corner top-left"></div>
+            <div class="scanner-corner top-right"></div>
+            <div class="scanner-corner bottom-left"></div>
+            <div class="scanner-corner bottom-right"></div>
+            <div class="scanner-laser-line"></div>
+          </div>
+
+          <div class="scanner-status-pill" id="scanner-status-pill">
+            <i class="bi bi-eye"></i> Ready • Align REC Pass QR Code in frame
+          </div>
+        </div>
+
+        <!-- Scanner Camera Switch / Controls -->
+        <div class="scanner-controls-row">
+          <div class="scanner-camera-select">
+            <label for="scanner-camera-source"><i class="bi bi-camera"></i> Camera:</label>
+            <select id="scanner-camera-source" class="form-select form-select-sm" onchange="switchCameraSource()">
+              <option value="environment" selected>Back Camera (Recommended)</option>
+              <option value="user">Front Camera</option>
+            </select>
+          </div>
+
+          <div class="scanner-sound-toggle">
+            <label>
+              <input type="checkbox" id="scanner-sound-enabled" checked>
+              <span><i class="bi bi-volume-up"></i> Chime</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Manual Pass ID Entry -->
+        <div class="manual-scan-box">
+          <label for="manual-pass-input">Or Enter / Paste REC Pass Reference Code:</label>
+          <div class="manual-scan-input-group">
+            <input type="text" id="manual-pass-input" placeholder="e.g. REC-2026-CS001-89B2" class="form-input">
+            <button type="button" class="btn-primary-action" onclick="verifyManualPassCode()">
+              <i class="bi bi-check-lg"></i> Verify
+            </button>
+          </div>
+        </div>
+
+        <!-- Fast Test Simulation Buttons -->
+        <div class="scanner-demo-fast-actions">
+          <span class="scanner-demo-label">1-Click Quick Demo Tests:</span>
+          <div class="scanner-test-chips" id="scanner-test-chips">
+            <!-- Rendered by script.js -->
+          </div>
+        </div>
+
+        <!-- Scan Verification Result Card -->
+        <div id="scan-verification-result" style="display: none;" class="scan-result-card">
+          <!-- Rendered dynamically upon successful scan -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeQRScannerModal()">Done / Close Scanner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 6: CREATE EVENT (COORDINATOR) ================= -->
+  <div class="modal-overlay" id="modal-create-event">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Publish REC Campus Event</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-create-event')">&times;</button>
+      </div>
+
+      <form id="create-event-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="evt-title">Event Title *</label>
+            <input type="text" id="evt-title" class="form-input" required placeholder="e.g. REC National AI Hackathon 2026">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="evt-category">Track / Category *</label>
+              <select id="evt-category" class="form-select" required>
+                <option value="technical">Technical</option>
+                <option value="cultural">Cultural</option>
+                <option value="sports">Sports</option>
+                <option value="workshops">Workshops</option>
+                <option value="seminars">Seminars</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evt-capacity">Participant Capacity *</label>
+              <input type="number" id="evt-capacity" class="form-input" required min="10" max="1000" value="100">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="evt-date">Date *</label>
+              <input type="date" id="evt-date" class="form-input" required value="2026-10-20">
+            </div>
+            <div class="form-group">
+              <label for="evt-time">Timing *</label>
+              <input type="text" id="evt-time" class="form-input" required placeholder="e.g. 09:30 AM - 04:30 PM">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="evt-venue">Campus Location / Venue *</label>
+            <input type="text" id="evt-venue" class="form-input" required placeholder="e.g. APJ Abdul Kalam Computing Center - CSE Block, REC">
+          </div>
+
+          <div class="form-group">
+            <label for="evt-summary">Overview Summary *</label>
+            <input type="text" id="evt-summary" class="form-input" required placeholder="Brief one-line summary for card previews">
+          </div>
+
+          <div class="form-group">
+            <label for="evt-description">Event Description & Rules *</label>
+            <textarea id="evt-description" class="form-textarea" rows="3" required placeholder="Detailed guidelines, agenda, and participant prerequisites..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="evt-coordinator">Faculty Coordinator</label>
+              <select id="evt-coordinator" class="form-select">
+                <option value="Dr. Ch. Srinivasu">Dr. Ch. Srinivasu (Computer Science & Engineering)</option>
+                <option value="Dr. R. Kameswara Rao">Dr. R. Kameswara Rao (Student Affairs)</option>
+                <option value="Dr. S. Satyanarayana">Dr. S. Satyanarayana (AI & Machine Learning)</option>
+                <option value="Prof. K. Rambabu">Prof. K. Rambabu (Physical Education)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evt-banner">Banner Image URL (Optional)</label>
+              <input type="url" id="evt-banner" class="form-input" placeholder="https://images.unsplash.com/...">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-create-event')">Cancel</button>
+          <button type="submit" class="btn-primary-action">Publish Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 7: ATTENDEES & ATTENDANCE MANAGER ================= -->
+  <div class="modal-overlay" id="modal-attendees">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3>Attendance & Participant Manager</h3>
+          <small style="color: var(--text-muted);" id="attendees-event-title">Event Title</small>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-attendees')">&times;</button>
+      </div>
+
+      <div class="modal-body" id="attendees-content">
+        <!-- Rendered by script.js -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary-action" style="background: var(--success); border-color: var(--success);" onclick="closeModal('modal-attendees'); openQRScannerModal();">
+          <i class="bi bi-qr-code-scan"></i> Open Camera Scanner
+        </button>
+        <button type="button" class="btn-outline" onclick="closeModal('modal-attendees')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 8: POST-EVENT FEEDBACK & RATING ================= -->
+  <div class="modal-overlay" id="modal-feedback">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <div>
+          <h3><i class="bi bi-star-fill text-warning me-1"></i> Event Feedback & Review</h3>
+          <small style="color: var(--text-muted);" id="feedback-event-title">Event Title</small>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-feedback')">&times;</button>
+      </div>
+
+      <form id="feedback-form">
+        <div class="modal-body">
+          <input type="hidden" id="feedback-event-id">
+
+          <!-- Star Rating -->
+          <div class="star-rating-box">
+            <label class="rating-label">Overall Experience Rating:</label>
+            <div class="star-rating-group" id="star-rating-group">
+              <button type="button" class="star-btn active" data-rating="1"><i class="bi bi-star-fill"></i></button>
+              <button type="button" class="star-btn active" data-rating="2"><i class="bi bi-star-fill"></i></button>
+              <button type="button" class="star-btn active" data-rating="3"><i class="bi bi-star-fill"></i></button>
+              <button type="button" class="star-btn active" data-rating="4"><i class="bi bi-star-fill"></i></button>
+              <button type="button" class="star-btn active" data-rating="5"><i class="bi bi-star-fill"></i></button>
+            </div>
+            <span class="rating-score-text" id="rating-score-text">5.0 / 5.0 (Outstanding!)</span>
+          </div>
+
+          <!-- Quick Highlight Tags -->
+          <div class="form-group">
+            <label>What stood out to you?</label>
+            <div class="feedback-tag-cloud">
+              <label class="feedback-tag-chip"><input type="checkbox" value="Insightful Content" checked> <span>Insightful Content</span></label>
+              <label class="feedback-tag-chip"><input type="checkbox" value="Great Coordinator" checked> <span>Great Coordinator</span></label>
+              <label class="feedback-tag-chip"><input type="checkbox" value="Hands-on Practical" checked> <span>Hands-on Practical</span></label>
+              <label class="feedback-tag-chip"><input type="checkbox" value="Punctual Schedule"> <span>Punctual Schedule</span></label>
+              <label class="feedback-tag-chip"><input type="checkbox" value="Good Refreshments"> <span>Good Refreshments</span></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="feedback-comments">Student Comments & Suggestions:</label>
+            <textarea id="feedback-comments" class="form-textarea" rows="3" placeholder="Share your key takeaways or suggestions for future events..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-feedback')">Cancel</button>
+          <button type="submit" class="btn-primary-action">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 9: BROADCAST ANNOUNCEMENT ================= -->
+  <div class="modal-overlay" id="modal-announcement">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <div>
+          <h3>Post Event Notice</h3>
+          <small style="color: var(--text-muted);" id="ann-event-title">Event Title</small>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-announcement')">&times;</button>
+      </div>
+
+      <form id="announcement-form">
+        <div class="modal-body">
+          <input type="hidden" id="ann-event-id">
+
+          <div class="form-group">
+            <label for="ann-title">Notice Headline *</label>
+            <input type="text" id="ann-title" class="form-input" required placeholder="e.g. Schedule Update / Venue Change">
+          </div>
+
+          <div class="form-group">
+            <label for="ann-message">Detailed Message *</label>
+            <textarea id="ann-message" class="form-textarea" rows="3" required placeholder="Information for registered attendees..."></textarea>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="ann-urgent" style="width: 15px; height: 15px; accent-color: var(--danger);">
+            <label for="ann-urgent" style="font-size: 0.82rem; font-weight: 500; color: var(--danger); margin-bottom: 0;">
+              Flag as Priority Notice
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-announcement')">Cancel</button>
+          <button type="submit" class="btn-primary-action" style="background: var(--danger); border-color: var(--danger);">
+            <i class="bi bi-broadcast"></i> Publish Notice
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 10: ADD FACULTY COORDINATOR (ADMIN) ================= -->
+  <div class="modal-overlay" id="modal-add-coordinator">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <div>
+          <h3>Add REC Faculty Coordinator</h3>
+          <small style="color: var(--text-muted);">Assign coordinator rights and event authority</small>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-coordinator')">&times;</button>
+      </div>
+
+      <form id="add-coordinator-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="coord-name">Coordinator Full Name *</label>
+            <input type="text" id="coord-name" class="form-input" required placeholder="e.g. Dr. Ch. Srinivasu">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="coord-dept">Academic Department *</label>
+              <select id="coord-dept" class="form-select" required>
+                <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                <option value="AI & Machine Learning">AI & Machine Learning</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Electronics & Communication">Electronics & Communication</option>
+                <option value="Electrical & Electronics">Electrical & Electronics</option>
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="Civil Engineering">Civil Engineering</option>
+                <option value="Student Affairs">Student Affairs</option>
+                <option value="Physical Education">Physical Education</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="coord-role">Designation / Role *</label>
+              <input type="text" id="coord-role" class="form-input" required placeholder="e.g. Professor & HOD" value="Faculty In-Charge">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="coord-email">Official Email *</label>
+              <input type="email" id="coord-email" class="form-input" required placeholder="faculty@raghuenggcollege.in">
+            </div>
+            <div class="form-group">
+              <label for="coord-phone">Contact Phone *</label>
+              <input type="tel" id="coord-phone" class="form-input" required placeholder="+91 9876543210">
+            </div>
+          </div>
+
+          <div style="background: var(--bg-subtle); padding: 10px 12px; border-radius: var(--radius-md); font-size: 0.8rem; color: var(--text-secondary); border: 1px solid var(--border-default);">
+            <i class="bi bi-shield-check text-primary me-1"></i>
+            Appointed faculty coordinators have authoring rights to publish events and mark gate attendance.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-add-coordinator')">Cancel</button>
+          <button type="submit" class="btn-primary-action">Add Coordinator</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <img src="logo.png" alt="REC Logo" style="width: 42px; height: 42px; object-fit: contain;">
+          <div>
+            <h4 style="margin: 0; font-size: 1rem;">Raghu Engineering College</h4>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">(Autonomous Institution • Estd. 2001)</span>
+          </div>
+        </div>
+        <p>
+          Accredited by NBA & NAAC with 'A+' Grade. Affiliated to JNTU-GV, Approved by AICTE, New Delhi.<br>
+          📍 Dakamarri (V), Bheemunipatnam Mandal, Visakhapatnam Dist. - 531162, Andhra Pradesh, India.<br>
+          🌐 <a href="https://raghuenggcollege.com" target="_blank" rel="noopener">www.raghuenggcollege.com</a>
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Core Event Modules</h4>
+        <ul>
+          <li>• REC Technical Hackathons & Symposia</li>
+          <li>• Tarang Annual Cultural Fest</li>
+          <li>• Hands-on Workshops & PyTorch Masterclasses</li>
+          <li>• Inter-Department Sports Championships</li>
+          <li>• Live In-Browser Camera Gate QR Scanner</li>
+          <li>• Verified Digital E-Pass & Certificate Generation</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Campus Portals</h4>
+        <ul>
+          <li>• Student Attendance & E-Pass Hub</li>
+          <li>• Faculty & Convener Management Desk</li>
+          <li>• Real-Time Seat Capacity & Waitlist Queue</li>
+          <li>• Automated Google Calendar & .ics Sync</li>
+          <li>• Post-Event 5-Star Feedback Analytics</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Raghu Engineering College (Autonomous). All rights reserved.</span>
+      <span>REC Campus Event Management System (REC-EMS)</span>
+    </div>
+  </footer>
+
+  <!-- App Controller -->
+  <script src="script.js"></script>
+</body>
+</html>

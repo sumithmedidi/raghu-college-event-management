@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Event Pass - {{ registration.registration_id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Digital Event Entry Pass</h1>
+      <p class="text-muted small mb-0">Show this digital QR pass at the event entrance for verification.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-dark btn-sm fw-semibold">
+        <i class="bi bi-printer me-1"></i> Print / Save PDF
+      </button>
+      <a href="{% url 'my_registrations' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> My Passes
+      </a>
+    </div>
+  </div>
+
+  <!-- Digital E-Pass Card -->
+  <div class="ticket-wrapper shadow">
+    <div class="ticket-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0 fw-bold fs-5">{{ event.title }}</h4>
+        <small class="text-light opacity-75">College Event Management System • Entry Pass</small>
+      </div>
+      <div class="badge bg-primary fs-6 font-monospace">{{ registration.registration_id }}</div>
+    </div>
+
+    <div class="ticket-body">
+      <div class="row align-items-center g-3">
+        <div class="col-sm-7">
+          <div class="mb-3">
+            <small class="text-muted text-uppercase fw-bold d-block">Student Name & Roll No</small>
+            <strong class="fs-6 text-dark">{{ registration.user.get_full_name|default:registration.user.username }}</strong>
+            {% if user_profile.roll_number %}
+              <span class="text-muted">({{ user_profile.roll_number }})</span>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <small class="text-muted text-uppercase fw-bold d-block">Academic Track & Year</small>
+            <span class="text-dark fw-semibold">{{ user_profile.department|default:'CSE' }} • {{ user_profile.year|default:'3rd Year' }}</span>
+          </div>
+
+          <div class="mb-3">
+            <small class="text-muted text-uppercase fw-bold d-block">Date & Time</small>
+            <span class="text-dark fw-semibold">{{ event.event_date|date:"M d, Y" }} | {{ event.start_time|time:"h:i A" }}</span>
+          </div>
+
+          <div>
+            <small class="text-muted text-uppercase fw-bold d-block">Venue Location</small>
+            <span class="text-dark fw-semibold">{{ event.venue }}</span>
+          </div>
+        </div>
+
+        <div class="col-sm-5 text-center">
+          <div class="p-3 bg-light border rounded-3 d-inline-block">
+            <!-- Simulated High Resolution QR Code Grid -->
+            <div style="width: 120px; height: 120px; background: white; border: 1px solid #cbd5e1; padding: 6px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+              <div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
+              <div></div><div style="background:#111;"></div><div></div><div></div><div style="background:#111;"></div><div></div>
+              <div style="background:#111;"></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div>
+              <div></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
+              <div style="background:#111;"></div><div style="background:#111;"></div><div></div><div></div><div style="background:#111;"></div><div></div>
+              <div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
+            </div>
+            <small class="text-muted fw-bold d-block mt-2 font-monospace" style="font-size: 10px;">GATE VERIFIED</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket-stub d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge {% if registration.status == 'attended' %}bg-success{% else %}bg-primary{% endif %} px-3 py-2 text-uppercase">
+          <i class="bi bi-shield-check me-1"></i> {{ registration.get_status_display }}
+        </span>
+        <small class="text-muted">Registered on: {{ registration.registered_at|date:"M d, Y" }}</small>
+      </div>
+
+      {% if not registration.attendance_marked %}
+        <form method="POST" action="{% url 'cancel_registration' registration.registration_id %}" onsubmit="return confirm('Are you sure you want to cancel this registration?');" class="no-print">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger btn-sm">Cancel Booking</button>
+        </form>
+      {% else %}
+        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 small">
+          <i class="bi bi-check2-all"></i> Attendance Recorded
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

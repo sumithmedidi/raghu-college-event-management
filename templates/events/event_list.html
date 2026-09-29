@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Campus Events{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Search & Filter Header -->
+  <div class="row g-3 align-items-center mb-4">
+    <div class="col-md-6">
+      <h1 class="h3 fw-bold mb-1">Campus Event Catalog</h1>
+      <p class="text-muted small mb-0">Discover technical hackathons, cultural fests, sports cups, and workshops.</p>
+    </div>
+    <div class="col-md-6">
+      <form method="GET" action="{% url 'event_list' %}" class="d-flex gap-2">
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" value="{{ selected_query }}" class="form-control" placeholder="Search by event title, venue, or coordinator...">
+        </div>
+        <button type="submit" class="btn btn-primary px-4 fw-semibold">Search</button>
+        {% if selected_query or selected_category or selected_status %}
+          <a href="{% url 'event_list' %}" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Pills Bar -->
+  <div class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom">
+    <a href="{% url 'event_list' %}{% if selected_query %}?q={{ selected_query }}{% endif %}" class="btn btn-sm {% if not selected_category %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+      <i class="bi bi-grid-fill me-1"></i> All Tracks
+    </a>
+    {% for cat in categories %}
+      <a href="{% url 'event_list' %}?category={{ cat.slug }}{% if selected_query %}&q={{ selected_query }}{% endif %}" class="btn btn-sm {% if selected_category == cat.slug %}btn-{{ cat.color }}{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+        <i class="bi {{ cat.icon }} me-1"></i> {{ cat.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Events Grid -->
+  <div class="row g-4">
+    {% for event in events %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card event-card h-100 shadow-sm border">
+          <div class="position-relative">
+            <img src="{{ event.banner_url|default:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80' }}" class="card-img-top event-card-img" alt="{{ event.title }}">
+            <span class="position-absolute top-0 start-0 m-2 badge bg-{{ event.category.color }} category-pill">
+              <i class="bi {{ event.category.icon }} me-1"></i> {{ event.category.name }}
+            </span>
+            <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75">
+              {{ event.get_status_display }}
+            </span>
+          </div>
+
+          <div class="card-body d-flex flex-direction-column">
+            <h5 class="card-title fw-bold mb-2">
+              <a href="{% url 'event_detail' event.slug %}" class="text-decoration-none text-dark">{{ event.title }}</a>
+            </h5>
+            <p class="card-text text-muted small flex-grow-1">{{ event.short_summary }}</p>
+
+            <ul class="list-unstyled small text-muted mb-3 border-top pt-2">
+              <li class="mb-1"><i class="bi bi-calendar3 text-primary me-2"></i> {{ event.event_date|date:"M d, Y" }} • {{ event.start_time|time:"h:i A" }}</li>
+              <li class="mb-1"><i class="bi bi-geo-alt text-danger me-2"></i> {{ event.venue }}</li>
+              <li><i class="bi bi-person-badge text-secondary me-2"></i> {{ event.coordinator_name }}</li>
+            </ul>
+
+            <!-- Seat Capacity Bar -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Seats: <strong>{{ event.registered_count }}</strong> / {{ event.max_capacity }}</span>
+                <span>{{ event.available_seats }} left</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio event.registered_count event.max_capacity 100 %}%;"></div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="{% url 'event_detail' event.slug %}" class="btn btn-outline-primary btn-sm flex-fill fw-semibold">
+                <i class="bi bi-info-circle me-1"></i> View Details
+              </a>
+              {% if event.is_registration_open %}
+                <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary btn-sm flex-fill fw-semibold">
+                  <i class="bi bi-ticket-perforated me-1"></i> Register
+                </a>
+              {% else %}
+                <button class="btn btn-secondary btn-sm flex-fill" disabled>Closed</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center py-5">
+        <div class="p-5 bg-white rounded-3 border">
+          <i class="bi bi-calendar-x text-muted fs-1 mb-3 d-block"></i>
+          <h4>No Events Found</h4>
+          <p class="text-muted">No events match your current filter or search criteria.</p>
+          <a href="{% url 'event_list' %}" class="btn btn-primary btn-sm mt-2">Reset All Filters</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
