@@ -55,7 +55,7 @@
   <!-- ================= MAIN APP NAVIGATION ================= -->
   <nav class="main-nav">
     <div class="nav-container">
-      <a href="#" class="brand-logo" onclick="switchTab('events')">
+      <a href="#" class="brand-logo" onclick="switchTab('events', false)">
         <div class="brand-logo-frame">
           <img src="logo.png" alt="Raghu Engineering College Logo" class="brand-logo-img">
         </div>
@@ -195,10 +195,10 @@
         </div>
 
         <div class="hero-quick-actions">
-          <button class="btn-outline" onclick="switchTab('events')">
+          <button class="btn-outline" id="btn-browse-events" onclick="switchTab('events', true)">
             <i class="bi bi-collection"></i> <span>Browse All Events</span>
           </button>
-          <button class="btn-outline" onclick="switchTab('my-events')">
+          <button class="btn-outline" id="btn-my-passes" onclick="switchTab('my-events', true)">
             <i class="bi bi-qr-code"></i> <span>My Passes & Certs</span>
           </button>
           <button class="btn-primary-action coordinator-only" style="display: none; max-width: fit-content;" onclick="openQRScannerModal()">
@@ -1050,6 +1050,10 @@
       <span>REC Campus Event Management System (REC-EMS)</span>
     </div>
   </footer>
+
+  <!-- Standard QR Code Engine & In-Browser Camera Decoder -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <!-- App Controller -->
   <script src="script.js"></script>

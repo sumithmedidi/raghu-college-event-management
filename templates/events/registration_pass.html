@@ -57,17 +57,9 @@
         </div>
 
         <div class="col-sm-5 text-center">
-          <div class="p-3 bg-light border rounded-3 d-inline-block">
-            <!-- Simulated High Resolution QR Code Grid -->
-            <div style="width: 120px; height: 120px; background: white; border: 1px solid #cbd5e1; padding: 6px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
-              <div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
-              <div></div><div style="background:#111;"></div><div></div><div></div><div style="background:#111;"></div><div></div>
-              <div style="background:#111;"></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div>
-              <div></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
-              <div style="background:#111;"></div><div style="background:#111;"></div><div></div><div></div><div style="background:#111;"></div><div></div>
-              <div style="background:#111;"></div><div></div><div style="background:#111;"></div><div style="background:#111;"></div><div></div><div style="background:#111;"></div>
-            </div>
-            <small class="text-muted fw-bold d-block mt-2 font-monospace" style="font-size: 10px;">GATE VERIFIED</small>
+          <div class="p-3 bg-white border rounded-3 d-inline-block shadow-sm">
+            <canvas id="django-pass-qr" width="130" height="130" style="width: 120px; height: 120px; display: block; margin: 0 auto;"></canvas>
+            <small class="text-muted fw-bold d-block mt-2 font-monospace" style="font-size: 10px;">GATE VERIFIED • REC-EMS</small>
           </div>
         </div>
       </div>
@@ -94,4 +86,45 @@
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('django-pass-qr');
+    if (!canvas) return;
+    const passId = "{{ registration.registration_id }}";
+    const ctx = canvas.getContext('2d');
+    const size = 130;
+    
+    if (typeof qrcode !== 'undefined') {
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData(passId);
+        qr.make();
+        const count = qr.getModuleCount();
+        const margin = 6;
+        const cellSize = (size - margin * 2) / count;
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, size, size);
+        
+        ctx.fillStyle = '#0F172A';
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(
+                Math.floor(margin + c * cellSize),
+                Math.floor(margin + r * cellSize),
+                Math.ceil(cellSize),
+                Math.ceil(cellSize)
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("QR Code error:", err);
+      }
+    }
+  });
+</script>
 {% endblock %}

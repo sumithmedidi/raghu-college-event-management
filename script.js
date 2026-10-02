@@ -355,17 +355,29 @@ function applyRolePermissions() {
   }
 }
 
-// ================= NAVIGATION CONTROLLER =================
+// ================= SCROLL & NAVIGATION CONTROLLER =================
+function scrollToSection(sectionId) {
+  const el = typeof sectionId === 'string' ? document.getElementById(sectionId) : sectionId;
+  if (!el) return;
+  const nav = document.querySelector('.main-nav');
+  const navHeight = nav ? nav.offsetHeight : 64;
+  const targetPos = el.getBoundingClientRect().top + window.pageYOffset - navHeight - 14;
+  window.scrollTo({
+    top: Math.max(0, targetPos),
+    behavior: 'smooth'
+  });
+}
+
 function setupNavigation() {
   document.querySelectorAll('.nav-link-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const targetTab = btn.getAttribute('data-tab');
-      switchTab(targetTab);
+      switchTab(targetTab, true);
     });
   });
 }
 
-function switchTab(tabName) {
+function switchTab(tabName, shouldScroll = true) {
   if (tabName === 'coordinator' && state.currentRole === 'student') {
     showToast('Coordinator Desk is restricted to REC Faculty & Admin roles.');
     tabName = 'events';
@@ -399,7 +411,23 @@ function switchTab(tabName) {
   if (viewCoord) viewCoord.style.display = tabName === 'coordinator' ? 'block' : 'none';
   if (viewAdmin) viewAdmin.style.display = tabName === 'admin' ? 'block' : 'none';
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (shouldScroll) {
+    let targetSection = null;
+    if (tabName === 'events') targetSection = viewEvents;
+    else if (tabName === 'my-events') targetSection = viewMyEvents;
+    else if (tabName === 'coordinator') targetSection = viewCoord;
+    else if (tabName === 'admin') targetSection = viewAdmin;
+
+    if (targetSection) {
+      setTimeout(() => {
+        scrollToSection(targetSection);
+      }, 15);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 // ================= SEARCH & CATEGORY FILTERS =================
@@ -411,7 +439,18 @@ function setupSearchAndFilters() {
       renderEventCards();
     });
     searchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') renderEventCards();
+      if (e.key === 'Enter') {
+        renderEventCards();
+        scrollToSection('view-events');
+      }
+    });
+  }
+
+  const searchBtn = document.querySelector('.search-btn');
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      renderEventCards();
+      scrollToSection('view-events');
     });
   }
 
@@ -1253,44 +1292,266 @@ function viewTicketModal(passId) {
   openModal('modal-ticket');
 }
 
+// Built-in Standard ISO/IEC 18004 QR Code Model 2 Engine
+const RECQRCode = (function() {
+  const EXP_TABLE = new Uint8Array(256);
+  const LOG_TABLE = new Uint8Array(256);
+  let x = 1;
+  for (let i = 0; i < 255; i++) {
+    EXP_TABLE[i] = x;
+    LOG_TABLE[x] = i;
+    x <<= 1;
+    if (x & 256) x ^= 285;
+  }
+  EXP_TABLE[255] = EXP_TABLE[0];
+
+  function gmult(a, b) {
+    if (a === 0 || b === 0) return 0;
+    return EXP_TABLE[(LOG_TABLE[a] + LOG_TABLE[b]) % 255];
+  }
+
+  function getPoly(ecCount) {
+    let poly = [1];
+    for (let i = 0; i < ecCount; i++) {
+      const next = new Array(poly.length + 1).fill(0);
+      for (let j = 0; j < poly.length; j++) {
+        next[j] ^= gmult(poly[j], EXP_TABLE[i]);
+        next[j + 1] ^= poly[j];
+      }
+      poly = next;
+    }
+    return poly;
+  }
+
+  function rsEncode(data, ecCount) {
+    const gen = getPoly(ecCount);
+    const msg = new Array(data.length + ecCount).fill(0);
+    for (let i = 0; i < data.length; i++) msg[i] = data[i];
+    for (let i = 0; i < data.length; i++) {
+      const coef = msg[i];
+      if (coef !== 0) {
+        for (let j = 0; j < gen.length; j++) {
+          msg[i + j] ^= gmult(gen[j], coef);
+        }
+      }
+    }
+    return msg.slice(data.length);
+  }
+
+  const VERSIONS = [
+    { version: 1, size: 21, dataCap: 16, ecCount: 10, align: [] },
+    { version: 2, size: 25, dataCap: 28, ecCount: 16, align: [6, 18] },
+    { version: 3, size: 29, dataCap: 44, ecCount: 26, align: [6, 22] },
+    { version: 4, size: 33, dataCap: 64, ecCount: 36, align: [6, 26] }
+  ];
+
+  function createMatrix(text) {
+    const bytes = new TextEncoder().encode(text);
+    let vSpec = VERSIONS.find(v => v.dataCap >= bytes.length + 3);
+    if (!vSpec) vSpec = VERSIONS[VERSIONS.length - 1];
+
+    const { version, size, dataCap, ecCount, align } = vSpec;
+
+    const bits = [];
+    const pushBits = (val, count) => {
+      for (let i = count - 1; i >= 0; i--) bits.push((val >> i) & 1);
+    };
+
+    pushBits(4, 4); // Byte mode (0100)
+    pushBits(bytes.length, 8); // Character count
+    for (let b of bytes) pushBits(b, 8);
+
+    // Terminator
+    pushBits(0, Math.min(4, dataCap * 8 - bits.length));
+    while (bits.length % 8 !== 0) bits.push(0);
+
+    // Pad bytes
+    const padBytes = [0xEC, 0x11];
+    let padIdx = 0;
+    while (bits.length < dataCap * 8) {
+      pushBits(padBytes[padIdx % 2], 8);
+      padIdx++;
+    }
+
+    const dataBytes = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let b = 0;
+      for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+      dataBytes.push(b);
+    }
+
+    const ecBytes = rsEncode(dataBytes, ecCount);
+    const allCodewords = dataBytes.concat(ecBytes);
+
+    const grid = Array.from({ length: size }, () => new Array(size).fill(null));
+    const isReserved = Array.from({ length: size }, () => new Array(size).fill(false));
+
+    function setModule(r, c, val) {
+      if (r >= 0 && r < size && c >= 0 && c < size) {
+        grid[r][c] = val;
+        isReserved[r][c] = true;
+      }
+    }
+
+    function addFinder(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        for (let c = -1; c <= 7; c++) {
+          const nr = row + r;
+          const nc = col + c;
+          if (nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+          if (r === -1 || r === 7 || c === -1 || c === 7) {
+            setModule(nr, nc, false);
+          } else if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+            setModule(nr, nc, true);
+          } else {
+            setModule(nr, nc, false);
+          }
+        }
+      }
+    }
+
+    addFinder(0, 0);
+    addFinder(0, size - 7);
+    addFinder(size - 7, 0);
+
+    for (let i = 8; i < size - 8; i++) {
+      if (!isReserved[6][i]) setModule(6, i, i % 2 === 0);
+      if (!isReserved[i][6]) setModule(i, 6, i % 2 === 0);
+    }
+
+    if (align && align.length === 2) {
+      const ar = align[1], ac = align[1];
+      if (!isReserved[ar][ac]) {
+        for (let r = -2; r <= 2; r++) {
+          for (let c = -2; c <= 2; c++) {
+            const isDark = Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0);
+            setModule(ar + r, ac + c, isDark);
+          }
+        }
+      }
+    }
+
+    setModule(4 * version + 9, 8, true);
+
+    for (let i = 0; i < 9; i++) {
+      if (i !== 6) { isReserved[8][i] = true; isReserved[i][8] = true; }
+    }
+    for (let i = 0; i < 8; i++) {
+      isReserved[8][size - 1 - i] = true;
+      isReserved[size - 1 - i][8] = true;
+    }
+
+    const allBits = [];
+    for (let b of allCodewords) {
+      for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
+    }
+
+    let bitIdx = 0;
+    let upward = true;
+    for (let rightCol = size - 1; rightCol > 0; rightCol -= 2) {
+      if (rightCol === 6) rightCol--;
+      const cols = [rightCol, rightCol - 1];
+      const rows = upward
+        ? Array.from({ length: size }, (_, i) => size - 1 - i)
+        : Array.from({ length: size }, (_, i) => i);
+
+      for (let r of rows) {
+        for (let c of cols) {
+          if (!isReserved[r][c]) {
+            const bit = bitIdx < allBits.length ? allBits[bitIdx++] : 0;
+            const mask = (r + c) % 2 === 0;
+            grid[r][c] = (bit === 1) ^ mask;
+          }
+        }
+      }
+      upward = !upward;
+    }
+
+    const formatBits = [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0];
+    for (let i = 0; i < 6; i++) grid[8][i] = formatBits[i] === 1;
+    grid[8][7] = formatBits[6] === 1;
+    grid[8][8] = formatBits[7] === 1;
+    grid[7][8] = formatBits[8] === 1;
+    for (let i = 0; i < 6; i++) grid[5 - i][8] = formatBits[9 + i] === 1;
+
+    for (let i = 0; i < 8; i++) grid[8][size - 1 - i] = formatBits[i] === 1;
+    for (let i = 0; i < 7; i++) grid[size - 7 + i][8] = formatBits[8 + i] === 1;
+
+    return { size, grid };
+  }
+
+  return {
+    draw: function(canvas, text) {
+      const { size, grid } = createMatrix(text);
+      const ctx = canvas.getContext('2d');
+      const canvasSize = canvas.width || 140;
+      const margin = 8;
+      const cellSize = (canvasSize - margin * 2) / size;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+      ctx.fillStyle = '#0F172A';
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (grid[r][c]) {
+            ctx.fillRect(
+              Math.floor(margin + c * cellSize),
+              Math.floor(margin + r * cellSize),
+              Math.ceil(cellSize),
+              Math.ceil(cellSize)
+            );
+          }
+        }
+      }
+    }
+  };
+})();
+
 function renderTicketQRCanvas(canvasId, passId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const size = 110;
+
+  const qrText = passId.trim();
+  const size = 150;
   canvas.width = size;
   canvas.height = size;
+  const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, size, size);
+  // Priority 1: Standard qrcode library if available
+  if (typeof qrcode !== 'undefined') {
+    try {
+      const qr = qrcode(0, 'M');
+      qr.addData(qrText);
+      qr.make();
+      const count = qr.getModuleCount();
+      const margin = 8;
+      const cellSize = (size - margin * 2) / count;
 
-  ctx.fillStyle = '#0F172A';
-  const block = 10;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, size, size);
 
-  const drawMarker = (x, y) => {
-    ctx.fillRect(x, y, 3 * block, 3 * block);
-    ctx.clearRect(x + block / 2, y + block / 2, 2 * block, 2 * block);
-    ctx.fillRect(x + block, y + block, block, block);
-  };
-
-  drawMarker(10, 10);
-  drawMarker(70, 10);
-  drawMarker(10, 70);
-
-  let hash = 0;
-  for (let i = 0; i < passId.length; i++) {
-    hash = (hash << 5) - hash + passId.charCodeAt(i);
-  }
-
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if ((r < 3 && c < 3) || (r < 3 && c > 5) || (r > 5 && c < 3)) continue;
-      const bit = (hash >> ((r * 9 + c) % 31)) & 1;
-      if (bit === 1 || (r + c) % 3 === 0) {
-        ctx.fillRect(10 + c * 10, 10 + r * 10, 8, 8);
+      ctx.fillStyle = '#0F172A';
+      for (let r = 0; r < count; r++) {
+        for (let c = 0; c < count; c++) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect(
+              Math.floor(margin + c * cellSize),
+              Math.floor(margin + r * cellSize),
+              Math.ceil(cellSize),
+              Math.ceil(cellSize)
+            );
+          }
+        }
       }
+      return;
+    } catch (err) {
+      console.warn("External QR code generator fallback:", err);
     }
   }
+
+  // Priority 2: Built-in Standalone QR Code Model 2 Engine
+  RECQRCode.draw(canvas, qrText);
 }
 
 // ================= VERIFIED CERTIFICATE MODAL =================
@@ -1350,6 +1611,7 @@ function viewCertificateModal(passId) {
 // ================= LIVE IN-BROWSER QR CAMERA SCANNER ENGINE =================
 let cameraStream = null;
 let scanInterval = null;
+let isScanThrottled = false;
 
 function openQRScannerModal() {
   if (state.currentRole === 'student') {
@@ -1382,13 +1644,18 @@ async function startCameraScanner() {
         cameraStream.getTracks().forEach(t => t.stop());
       }
       cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: facingMode } },
+        video: { facingMode: { ideal: facingMode }, width: { ideal: 640 }, height: { ideal: 480 } },
         audio: false
       });
       video.srcObject = cameraStream;
+      video.setAttribute('playsinline', true);
+      await video.play();
+
       if (statusPill) {
-        statusPill.innerHTML = `<i class="bi bi-camera-video-fill text-success"></i> Live REC Camera Active • Scan E-Pass`;
+        statusPill.innerHTML = `<i class="bi bi-camera-video-fill text-success"></i> Live Scanner Active • Align Student QR Pass`;
       }
+
+      startScanDecodingLoop();
     }
   } catch (err) {
     console.warn("Camera access unavailable or simulated:", err);
@@ -1396,6 +1663,70 @@ async function startCameraScanner() {
       statusPill.innerHTML = `<i class="bi bi-info-circle text-warning"></i> Camera Simulation Ready (Use fast test buttons or manual code)`;
     }
   }
+}
+
+function startScanDecodingLoop() {
+  if (scanInterval) clearInterval(scanInterval);
+
+  const video = document.getElementById('qr-video');
+  const canvas = document.getElementById('qr-canvas');
+  if (!video || !canvas) return;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  scanInterval = setInterval(async () => {
+    if (isScanThrottled || !cameraStream || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+    // Method 1: Native BarcodeDetector Web API (Fastest on Android / Chrome)
+    if ('BarcodeDetector' in window) {
+      try {
+        const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+        const barcodes = await barcodeDetector.detect(video);
+        if (barcodes && barcodes.length > 0) {
+          handleScannedCode(barcodes[0].rawValue);
+          return;
+        }
+      } catch (e) {
+        // Fallback to jsQR
+      }
+    }
+
+    // Method 2: jsQR Canvas Frame Decoder
+    if (typeof jsQR !== 'undefined') {
+      try {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (decoded && decoded.data) {
+          handleScannedCode(decoded.data);
+        }
+      } catch (e) {
+        // Continue scan loop
+      }
+    }
+  }, 200);
+}
+
+function handleScannedCode(scannedText) {
+  if (!scannedText || isScanThrottled) return;
+  isScanThrottled = true;
+
+  let passId = scannedText.trim();
+  const match = scannedText.match(/REC-2026-[A-Z0-9]+-[A-Z0-9]+/i);
+  if (match) {
+    passId = match[0].toUpperCase();
+  }
+
+  verifyPassCode(passId);
+
+  // Throttle scanner for 2.5s to prevent repeated triggers
+  setTimeout(() => {
+    isScanThrottled = false;
+  }, 2500);
 }
 
 function stopCameraScanner() {

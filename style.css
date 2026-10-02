@@ -155,7 +155,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: background-color var(--transition-normal), color var(--transition-normal);
-  padding-bottom: 70px; /* Space for mobile bottom bar */
+  padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)); /* Space for mobile bottom bar with iOS safe area */
 }
 
 @media (min-width: 769px) {
@@ -189,6 +189,64 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  touch-action: manipulation;
+}
+
+/* Accessibility: Universal High-Visibility Keyboard Focus Rings */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom Scrollbars (Light & Dark Mode) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--bg-app);
+}
+
+/* Skeleton Loading Shimmer Utility */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-muted) 50%, var(--bg-subtle) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
 }
 
 img {
@@ -976,6 +1034,14 @@ img {
 }
 
 /* --- 7. MAIN APP CONTAINER & SECTIONS --- */
+.app-container,
+#view-events,
+#view-my-events,
+#view-coordinator,
+#view-admin {
+  scroll-margin-top: 80px;
+}
+
 .app-container {
   max-width: 1240px;
   margin: 32px auto;
@@ -1033,6 +1099,8 @@ img {
   overflow-x: auto;
   padding-bottom: 6px;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1054,6 +1122,7 @@ img {
   white-space: nowrap;
   transition: all var(--transition-fast);
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .tab-btn:hover {
@@ -1098,6 +1167,8 @@ img {
   box-shadow: var(--shadow-xs);
   transition: all var(--transition-normal);
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 360px;
 }
 
 .event-card:hover {
@@ -1522,6 +1593,11 @@ img {
   border-bottom: 1px solid var(--border-default);
   color: var(--text-primary);
   vertical-align: middle;
+}
+
+.data-table tr {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 48px;
 }
 
 .data-table tr:last-child td {
@@ -2063,6 +2139,7 @@ img {
   margin: 0 auto;
   max-width: 500px;
   width: 100%;
+  position: relative;
 }
 
 .ticket-top {
@@ -2121,26 +2198,53 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
   border-radius: var(--radius-md);
   padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .qr-canvas-render {
-  width: 110px;
-  height: 110px;
+  width: 124px;
+  height: 124px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
 }
 
 .ticket-bottom-bar {
   background: #F8FAFC;
-  border-top: 1px dashed #CBD5E1;
+  border-top: 1.5px dashed #CBD5E1;
   padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 0.78rem;
   color: #64748B;
+  position: relative;
+}
+
+/* Authentic Ticket Perforation Cutouts */
+.ticket-bottom-bar::before,
+.ticket-bottom-bar::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  width: 18px;
+  height: 18px;
+  background: var(--bg-surface);
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  z-index: 2;
+}
+
+.ticket-bottom-bar::before {
+  left: -10px;
+}
+
+.ticket-bottom-bar::after {
+  right: -10px;
 }
 
 /* Certificate Sheet */
@@ -2299,7 +2403,8 @@ img {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--bg-surface);
   border-top: 1px solid var(--border-default);
   display: flex;
